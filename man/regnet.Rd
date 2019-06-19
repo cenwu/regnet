@@ -7,7 +7,7 @@
 regnet(X, Y, response = c("binary", "continuous", "survival"),
   penalty = c("network", "mcp", "lasso"), lamb.1 = NULL,
   lamb.2 = NULL, r = NULL, clv = NULL, initiation = NULL,
-  alpha.i = 1, robust = TRUE)
+  alpha.i = 1, robust = FALSE)
 }
 \arguments{
 \item{X}{matrix of predictors without intercept. Each row should be an observation vector. A column of 1 will be added to the X matrix
@@ -67,7 +67,7 @@ using the subset of variables that have non-zero coefficients.
 data(SurvExample)
 X = rgn.surv$X
 Y = rgn.surv$Y
-clv = c(1:5) # variable 1 to 5 are clinical variables which we choose not to penalize.
+clv = c(1:5) # variables 1 to 5 are clinical variables which we choose not to penalize.
 penalty = "network"
 b = regnet(X, Y, "survival", penalty, rgn.surv$lamb1, rgn.surv$lamb2, clv=clv, robust=TRUE)
 index = which(rgn.surv$beta != 0)
@@ -82,8 +82,9 @@ Ren, J., He, T., Li, Y., Liu, S., Du, Y., Jiang, Y., and Wu, C. (2017).
 Network-based regularization for high dimensional SNP data in the case-control study of
 Type 2 diabetes. \href{https://doi.org/10.1186/s12863-017-0495-5}{\emph{BMC Genetics}, 18(1):44}
 
-Ren, J., Du, Y., Li, S., Chu, G., Ma, S., Jiang,Y. and Wu, C. (2018). Robust network based regularization
+Ren, J., Du, Y., Li, S., Ma, S., Jiang,Y. and Wu, C. (2019). Robust network-based regularization
 and variable selection for high dimensional genomics data in cancer prognosis.
+\href{https://doi.org/10.1002/gepi.22194}{\emph{Genet. Epidemiol.}, 43:276-291}
 }
 \seealso{
 \code{\link{cv.regnet}}

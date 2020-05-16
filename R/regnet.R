@@ -27,7 +27,7 @@
 #' @param robust logical flag. Whether or not to use robust methods. Robust methods are only available for survival response.
 #'
 #' @details The current version of regnet supports two types of responses: “binary”, "continuous" and “survival”.
-#' \enumerate{
+#' \itemize{
 #' \item {regnet(…, response="binary", penalty="network")} fits a network-based penalized logistic regression.
 #' \item {regnet(…, response="continuous", penalty="network")} fits a network-based least square regression.
 #' \item {regnet(…, response="survival", penalty="network")} fits a robust regularized AFT model using network penalty.
@@ -86,9 +86,12 @@ regnet <- function(X, Y, response=c("binary", "continuous", "survival"), penalty
     if(ncol(Y) != 2) stop("Y should be a two-column matrix")
     if(!setequal(colnames(Y), c("time", "status"))) stop("Y should be a two-column matrix with columns named 'time' and 'status'")
     Y0 = Y[,"time"]
-    status = Y[,"status"]
+    status = as.numeric(Y[,"status"])
     if(sum(Y0<=0)>0) stop("Survival times need to be positive")
-  }else{
+    if(!all(status%in% c(0,1))) stop("status has to be a binary variable of 1 and 0.")
+  }
+  if(response=="binary"){
+    if(!all(Y%in% c(0,1))) stop("Y has to be a binary variable of 1 and 0.")
     if(robust) message("Robust methods are not available for ", response, " response.")
   }
   if(alpha.i>1 | alpha.i<0) stop("alpha.i should be between 0 and 1")
@@ -100,7 +103,7 @@ regnet <- function(X, Y, response=c("binary", "continuous", "survival"), penalty
 
   out=switch (response,
               "binary" = LogitCD(X, Y, penalty, lamb.1, lamb.2, r, alpha, init=initiation, alpha.i,standardize),
-              "continuous" = ContCD(X, Y, penalty, lamb.1, lamb.2, clv, r, alpha, init=initiation, alpha.i,standardize),
+              "continuous" = ContCD(X, Y, penalty, lamb.1, lamb.2, clv, r, alpha, init=initiation, alpha.i, robust, standardize),
               "survival" = SurvCD(X, Y0, status, penalty, lamb.1, lamb.2, clv, r, init=initiation, alpha.i, robust, standardize)
   )
   # fit$call = this.call

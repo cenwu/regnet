@@ -3,7 +3,7 @@
 
 # regnet
 
-> Regularized Network-Based Variable Selection
+> **Reg**ularized **Net**work-Based Variable Selection
 
 <!-- badges: start -->
 
@@ -27,7 +27,8 @@ versions.
 
 ## How to install
 
-  - To install from github, run these two lines of code in R
+  - To install the devel version from github, run these two lines of
+    code in R
 
 <!-- end list -->
 
@@ -55,13 +56,21 @@ Y = rgn.surv$Y
 clv = c(1:5) # variable 1 to 5 are clinical variables, we choose not to penalize them here.
 out = cv.regnet(X, Y, response="survival", penalty="network", clv=clv, robust=TRUE, verbo = TRUE)
 out$lambda
-b = regnet(X, Y, "survival", "network", out$lambda[1,1], out$lambda[1,2], clv=clv, robust=TRUE)  
+fit = regnet(X, Y, "survival", "network", out$lambda[1,1], out$lambda[1,2], clv=clv, robust=TRUE)  
 index = which(rgn.surv$beta[-(1:6)] != 0)  # [-(1:6)] removes the intercept and clinical variables that are not subject to selection.
-pos = which(b[-(1:6)] != 0)  
+pos = which(fit$coeff[-(1:6)] != 0)  
 tp = length(intersect(index, pos))  
 fp = length(pos) - tp  
 list(tp=tp, fp=fp)  
 ```
+
+##### The cross-validation step can run on multiple cores (OpenMP):
+
+    # detect the number of CPU cores on the current host
+    library("parallel")
+    ncores = parallel::detectCores(logical=FALSE) # ncores>2 can show significant increases in speed
+    # parallel CV 
+    out = cv.regnet(X, Y, response="s", penalty="n", clv=clv, robust=TRUE, ncores=ncores, verbo = TRUE)
 
 ### Binary response
 
@@ -73,9 +82,9 @@ X = rgn.logi$X
 Y = rgn.logi$Y
 out = cv.regnet(X, Y, response="binary", penalty="network", folds=5, r = 4.5)  
 out$lambda 
-b = regnet(X, Y, "binary", "network", out$lambda[1,1], out$lambda[1,2], r = 4.5)
+fit = regnet(X, Y, "binary", "network", out$lambda[1,1], out$lambda[1,2], r = 4.5)
 index = which(rgn.logi$beta[-1] != 0)   # [-1] removes the intercept
-pos = which(b[-1] != 0)  
+pos = which(fit$coeff[-1] != 0)  
 tp = length(intersect(index, pos))  
 fp = length(pos) - tp  
 list(tp=tp, fp=fp)  
@@ -86,17 +95,24 @@ list(tp=tp, fp=fp)
 #### Example.3 (Network graphs)
 
     data(ContExample)
-    X = rgn.surv$X
-    Y = rgn.surv$Y
+    X = rgn.tcga$X
+    Y = rgn.tcga$Y
     clv = (1:2)
     fit = regnet(X, Y, "continuous", "network", rgn.tcga$lamb1, rgn.tcga$lamb2, clv =clv, alpha.i=0.5)
-    plot(fit)
-    plot(fit, subnetworks = TRUE, vsize=20, labelDist = 3, theta = 5) 
+    net = plot(fit)
+    subs = plot(fit, subnetworks = TRUE, vsize=20, labelDist = 3, theta = 5) 
 
 ![](README-unnamed-chunk-2-1.png)<!-- -->
 ![](README-unnamed-chunk-2-2.png)<!-- -->
 
 ## News
+
+### regnet (development version) \[2020-5\]
+
+  - cv.regnet() now can run on multiple cores via the support of OpenMP
+    library.
+  - A generic function plot() is added for plotting the network
+    structures among the identified genetic variants.
 
 ### regnet 0.4.0 \[2019-6-7\]
 
@@ -104,7 +120,7 @@ Based on users’ feedback, we have
 
   - Added more checking steps for data format, which help users make
     sure their data are in the correct format.
-  - Provided more information in the documentation for troubleshooting .
+  - Provided more information in the documentation for troubleshooting.
 
 ### regnet 0.3.0 \[2018-5-21\]
 

@@ -13,31 +13,37 @@ CV.Logit <- function(X, Y, penalty=c("network", "mcp", "lasso"), lamb.1=NULL, la
 
   n = nrow(X); p = ncol(X);
   X = as.matrix(X); Y = as.matrix(Y)
+  X = scale(X, center = TRUE, scale = FALSE)
 
   b0 = rep(0, p+1)
   rs <- sample(c(1:n))
   CVM = matrix(0, length(lamb.1), length(lamb.2))
   method = substr(penalty, 1, 1)
+  if(penalty == "network") a = Adjacency(X) else a = as.matrix(0)
   #---------------------------------------------- Main Loop -----------------------------------------
   for(f in 1:folds){
     if(verbo) cat("CrossValidation: ",f, "/", folds, "\n")
     index = c(1: ceiling(n/folds)) + (f-1)*ceiling(n/folds)
     test = rs[intersect(index, seq(1,n,1))]
 
-    x = X[-test,]; y = Y[-test]
-    x2 = X[test,]; y2 = Y[test]
+    x = X[-test,,drop=FALSE]; y = Y[-test]
+    x2 = X[test,,drop=FALSE]; y2 = Y[test]
     if(standardize){
-      V1 = apply(x, 2, function(t) stats::sd(t)*sqrt((n-1)/n)); V1[V1==0]=1
-      V2 = apply(x2, 2, function(t) stats::sd(t)*sqrt((n-1)/n)); V2[V2==0]=1
+      V1 = apply(x, 2, function(t) stats::sd(t)*sqrt((n-1)/n)); V1[V1==0|is.na(V1)]=1
+      V2 = apply(x2, 2, function(t) stats::sd(t)*sqrt((n-1)/n)); V2[V2==0|is.na(V2)]=1
       x = scale(x, center = FALSE, scale = V1 )
       x2 = scale(x2, center = FALSE, scale = V2)
     }
-    if(penalty == "network") a = Adjacency(x) else a = as.matrix(0)
+    # if(penalty == "network") a = Adjacency(x) else a = as.matrix(0)
 
     x = cbind(1, x); x2 = cbind(1, x2)
     if(init == "elnet") b0 = initiation(x, y, alpha.i, "binomial")
 
-    CVM = CVM + LogitGrid(x, y, x2, y2, lamb.1, lamb.2, b0, r, a, p, alpha, method, ncores)
+    if(ncores>1){
+      CVM = CVM + LogitGrid_MC(x, y, x2, y2, lamb.1, lamb.2, b0, r, a, p, alpha, method, ncores)
+    }else{
+      CVM = CVM + LogitGrid(x, y, x2, y2, lamb.1, lamb.2, b0, r, a, p, alpha, method)
+    }
 
   }
   CVM = CVM/n

@@ -1,6 +1,6 @@
 #include<RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
-#include"ContCD.h"  // ContNet, ContMCP,ContLasso have been claimed in this head file
+#include"ContCD.h"  
 #include"Utilities.h"
 
 using namespace Rcpp;
